@@ -6,6 +6,7 @@
 window.onload = function () {
     var conn;
     var msg = document.getElementById("msg");
+    var id = document.getElementById("id");
     var log = document.getElementById("log");
 
     function appendLog(item) {
@@ -23,13 +24,15 @@ window.onload = function () {
         if (!msg.value) {
             return false;
         }
-        conn.send(msg.value);
+        conn.send(id.value + ":" + msg.value);
         msg.value = "";
         return false;
     };
 
     if (window["WebSocket"]) {
-        conn = new WebSocket("ws://" + document.location.host + "/ws");
+        //conn = new WebSocket("ws://" + document.location.host + "/ws/111");
+        group = document.location.href.split('/');
+        conn = new WebSocket("ws://" + document.location.host + "/ws/" + group[group.length-1]);
         conn.onclose = function (evt) {
             var item = document.createElement("div");
             item.innerHTML = "<b>Connection closed.</b>";
@@ -79,6 +82,7 @@ body {
 #form {
     padding: 0 0.5em 0 0.5em;
     margin: 0;
+    background-color: white;
     position: absolute;
     bottom: 1em;
     left: 0px;
@@ -91,8 +95,11 @@ body {
 <body>
 <div id="log"></div>
 <form id="form">
+    id: <input type="text" id="id" size="64"/>
+    <br>
+    message: <input type="text" id="msg" size="64"/>
+    
     <input type="submit" value="Send" />
-    <input type="text" id="msg" size="64"/>
 </form>
 </body>
 </html>
