@@ -28,13 +28,12 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func hubHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println(r.URL.Path)
+	// log.Println(r.URL.Path)
 	m := validPath.FindStringSubmatch(r.URL.Path)
 	if m == nil {
 		http.NotFound(w, r)
 		return
 	}
-	log.Println(m[2])
 	id := m[2]
 
 	hub := getHub(id)
@@ -46,10 +45,19 @@ func hubHandler(w http.ResponseWriter, r *http.Request) {
 	serveWs(hub, w, r)
 }
 
+// RoomLog contains log in each room since it is created.
+var RoomLog = SafeRoomLog{v: make(map[string][][]byte)}
+
+// UserLog marks the last message the user read in each room.
+var UserLog = SafeUserLog{v: make(map[UserKey]int)}
+
 func main() {
 	flag.Parse()
 	http.HandleFunc("/", serveHome)
 	http.HandleFunc("/ws/", hubHandler)
+
+	fs := http.FileServer(http.Dir("resources"))
+	http.Handle("/resources/", http.StripPrefix("/resources/", fs))
 
 	err := http.ListenAndServe(*addr, nil)
 	if err != nil {
