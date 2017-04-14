@@ -45,11 +45,27 @@ func (h *Hub) run() {
 		select {
 		case client := <-h.register:
 			h.clients[client] = true
+
 			// Sent chatlog to the new client
 			// Warning: By flooding chatlog into the client send channel, the newly registered client will be terminated
 			// if the chatlog is larger than channel buffer size
 			RoomLog.RLock()
-			for _, m := range RoomLog.v[h.id] {
+			
+			UserLog.RLock()
+			unread := UserLog.v[UserKey{client.id, h.id}]
+			UserLog.RUnlock()
+
+			for i, m := range RoomLog.v[h.id] {
+				// Sent additional message to sperate read and unread message
+				if i == unread {
+					select {
+					case client.send <- []byte("--unread message--"):
+					default:
+						close(client.send)
+						delete(h.clients, client)
+					}
+				}
+
 				select {
 				case client.send <- m:
 				default:
@@ -72,6 +88,15 @@ func (h *Hub) run() {
 			for client := range h.clients {
 				select {
 				case client.send <- message:
+					// Set user's read log to the last message sent to client
+					// This is supposed to be done after the client reads from channel 
+					// to ensure that the message is sent to user.
+					// Somewhat thead safe.
+					UserLog.Lock()
+					RoomLog.RLock()
+					UserLog.v[UserKey{client.id, h.id}] = len(RoomLog.v[h.id])
+					RoomLog.RUnlock()
+					UserLog.Unlock()
 				default:
 					close(client.send)
 					delete(h.clients, client)

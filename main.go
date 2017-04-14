@@ -15,26 +15,29 @@ var validRoomPath = regexp.MustCompile("^/room/([0-9]+)$")
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
-	/*m := validPath.FindStringSubmatch(r.URL.Path)
-	if m == nil {
-		http.Error(w, "Not found", 404)
-		return
-	}*/
-	
+
 	if r.URL.Path != "/" {
 		http.Error(w, "Not found", 404)
 		return
 	}
 
-	if r.Method != "GET" {
+	if r.Method == "GET" {
+		http.ServeFile(w, r, "home.html")
+		return
+	/*} else if r.Method == "POST" {
+		username := r.FormValue("username")
+		room := r.FormValue("room")
+	*/	
+	} else {
 		http.Error(w, "Method not allowed", 405)
 		return
 	}
-	http.ServeFile(w, r, "home.html")
+
+	
 }
 
 func serveRoom(w http.ResponseWriter, r *http.Request) {
-	log.Println(r.URL)
+	//log.Println(r.URL)
 	m := validRoomPath.FindStringSubmatch(r.URL.Path)
 	if m == nil {
 		http.Error(w, "Not found", 404)
@@ -63,7 +66,10 @@ func hubHandler(w http.ResponseWriter, r *http.Request) {
 		hub = newHub(id)
 		go hub.run()
 	}
-	serveWs(hub, w, r)
+	cookie, _ := r.Cookie("username")
+	log.Println(cookie.Value)
+
+	serveWs(cookie.Value, hub, w, r)
 }
 
 // RoomLog contains log in each room since it is created.

@@ -35,6 +35,9 @@ var upgrader = websocket.Upgrader{
 
 // Client is a middleman between the websocker connection and the hub.
 type Client struct {
+	id string
+
+	// The hub this client belong to.
 	hub *Hub
 
 	// The websocket connection.
@@ -69,7 +72,7 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
+		c.hub.broadcast <- append([]byte(c.id+": "), message...)
 	}
 }
 
@@ -120,13 +123,13 @@ func (c *Client) writePump() {
 }
 
 // serveWs handles websocket requests from the peer.
-func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
+func serveWs(id string, hub *Hub, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+	client := &Client{id: id, hub: hub, conn: conn, send: make(chan []byte, 256)}
 	client.hub.register <- client
 	go client.writePump()
 	client.readPump()
