@@ -21,7 +21,7 @@ type Hub struct {
 	backup chan BackupMessage
 }
 
-// hubs keep track of all active hub
+// hubs keeps track of all active hub
 var hubs = make(map[string]*Hub)
 
 func newHub(id string, backup chan BackupMessage) *Hub {

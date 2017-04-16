@@ -1,8 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"bytes"
+	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
@@ -13,8 +13,8 @@ import (
 )
 
 type BackupMessage struct {
-	Hub_id  string  `json:"hubId"`
-	Message []byte  `json:"message"`
+	Hub_id  string `json:"hubId"`
+	Message []byte `json:"message"`
 }
 
 type BackupSlave struct {
@@ -83,7 +83,7 @@ func (h *BackupHub) run() {
 						delete(h.clients, client)
 					}
 				}
-			}	
+			}
 			RoomLog.RUnlock()
 
 		case client := <-h.unregister:
@@ -112,7 +112,7 @@ func (h *BackupHub) run() {
 }
 
 // readBackupMasterPump reads messages from the slave websocket which connects to the slave.
-// In the current model, the backup process will not send anything to master thus 
+// In the current model, the backup process will not send anything to master thus
 // nothing will come in this pump.
 func (c *BackupClient) readBackupMasterPump() {
 	defer func() {

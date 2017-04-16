@@ -98,10 +98,10 @@ func main() {
 
 	http.HandleFunc("/", serveHome)
 	http.HandleFunc("/room/", serveRoom)
-	http.HandleFunc("/backup", func (w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/backup", func(w http.ResponseWriter, r *http.Request) {
 		serveBackupMaster(backupHub, w, r)
 	})
-	http.HandleFunc("/ws/", func (w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/ws/", func(w http.ResponseWriter, r *http.Request) {
 		hubHandler(w, r, backupHub.broadcast)
 	})
 

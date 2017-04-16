@@ -6,7 +6,7 @@ import (
 
 // SafeChatLog is safe to use concurrently.
 type SafeRoomLog struct {
-	v   map[string][][]byte
+	v map[string][][]byte
 	sync.RWMutex
 }
 
@@ -16,6 +16,6 @@ type UserKey struct {
 
 // SafeUserLog is safe to use concurrently.
 type SafeUserLog struct {
-	v   map[UserKey]int
+	v map[UserKey]int
 	sync.RWMutex
 }
