@@ -11,23 +11,27 @@ type Hub struct {
 	// Inbound message from the clients.
 	broadcast chan []byte
 
-	// Refister requests from the clients.
+	// Register requests from the clients.
 	register chan *Client
 
 	// Unregister requests from clients.
 	unregister chan *Client
+
+	// Send backup to BackupHub
+	backup chan BackupMessage
 }
 
 // hubs keep track of all active hub
 var hubs = make(map[string]*Hub)
 
-func newHub(id string) *Hub {
+func newHub(id string, backup chan BackupMessage) *Hub {
 	hubs[id] = &Hub{
 		id:         id,
 		broadcast:  make(chan []byte),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		clients:    make(map[*Client]bool),
+		backup:     backup,
 	}
 	return hubs[id]
 }
@@ -50,7 +54,7 @@ func (h *Hub) run() {
 			// Warning: By flooding chatlog into the client send channel, the newly registered client will be terminated
 			// if the chatlog is larger than channel buffer size
 			RoomLog.RLock()
-			
+
 			UserLog.RLock()
 			unread := UserLog.v[UserKey{client.id, h.id}]
 			UserLog.RUnlock()
@@ -89,7 +93,7 @@ func (h *Hub) run() {
 				select {
 				case client.send <- message:
 					// Set user's read log to the last message sent to client
-					// This is supposed to be done after the client reads from channel 
+					// This is supposed to be done after the client reads from channel
 					// to ensure that the message is sent to user.
 					// Somewhat thead safe.
 					UserLog.Lock()
@@ -102,6 +106,9 @@ func (h *Hub) run() {
 					delete(h.clients, client)
 				}
 			}
+			// Pack the message to BackupMessage struct and pump it to the backup hub.
+			backup_message := BackupMessage{Hub_id: h.id, Message: message}
+			h.backup <- backup_message
 		}
 	}
 }

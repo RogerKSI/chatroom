@@ -11,7 +11,7 @@ type SafeRoomLog struct {
 }
 
 type UserKey struct {
-	userid, roomid string
+	Userid, Roomid string
 }
 
 // SafeUserLog is safe to use concurrently.
