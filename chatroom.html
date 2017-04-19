@@ -7,8 +7,8 @@
 		<!--Import Google Icon Font-->
 		<link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 		<!--Import materialize.css-->
-		<link type="text/css" rel="stylesheet" href="resources/css/materialize.min.css"  media="screen,projection"/>
-		<link type="text/css" rel="stylesheet" href="resources/css/style.css" />
+		<link type="text/css" rel="stylesheet" href="/resources/css/materialize.min.css"  media="screen,projection"/>
+		<link type="text/css" rel="stylesheet" href="/resources/css/style.css" />
 
 		<!--Let browser know website is optimized for mobile-->
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -17,23 +17,27 @@
 	<body>
 		<!--Import jQuery before materialize.js-->
 		
-		<div class="container">
-			<div id="log" style="height: 60vh">
+		<div class="container" style="padding-top:30px;">
+			<div id="log" style="height: 60vh;max-height: 60vh;overflow-y:auto;">
 			</div>
-			<form id="form">
-				message: <input type="text" id="msg" size="64"/>
-			 <button class="btn waves-effect waves-light" type="submit" name="action">Submit
-					<i class="material-icons right">send</i>
-				</button>
-			</form>		
+			<div style="padding-top: 30px;">
+				<form id="form">
+					message: <input type="text" id="msg" size="64"/>
+				 <button class="btn waves-effect waves-light" type="submit" name="action">Submit
+						<i class="material-icons right">send</i>
+					</button>
+				</form>		
+			</div>
 		</div>
 		
 		
 		<script type="text/javascript" src="
 		https://code.jquery.com/jquery-2.1.1.min.js"></script>
-		<script type="text/javascript" src="resources/js/materialize.min.js"></script>
+		<script type="text/javascript" src="/resources/js/materialize.min.js"></script>
 		<script type="text/javascript">
 			window.onload = function () {
+					var i = 0;
+					var port = [8080,8081];
 					var conn;
 					var msg = document.getElementById("msg");
 					var log = document.getElementById("log");
@@ -59,13 +63,29 @@
 					};
 
 					if (window["WebSocket"]) {
+						connect(i);
+					} else {
+							var item = document.createElement("div");
+							item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
+							appendLog(item);
+					}
+					
+					function connect(i){
 							//conn = new WebSocket("ws://" + document.location.host + "/ws/111");
 							group = document.location.href.split('/');
-							conn = new WebSocket("ws://" + document.location.host + "/ws/" + group[group.length-1]);
+							console.log(document.location);
+							console.log(port);
+							console.log(i);
+							conn = new WebSocket("ws://" + document.location.hostname + ":" + port[i] + "/ws/" + group[group.length-1]);
 							conn.onclose = function (evt) {
 									var item = document.createElement("div");
 									item.innerHTML = "<b>Connection closed.</b>";
 									appendLog(item);
+									
+									i++;
+									if(i >= port.length)
+										i=0;
+									connect(i);
 							};
 							conn.onmessage = function (evt) {
 									var messages = evt.data.split('\n');
@@ -75,10 +95,7 @@
 											appendLog(item);
 									}
 							};
-					} else {
-							var item = document.createElement("div");
-							item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
-							appendLog(item);
+						
 					}
 			};
 		</script>
