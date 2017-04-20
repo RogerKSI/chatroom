@@ -70,7 +70,11 @@ func hubHandler(w http.ResponseWriter, r *http.Request, b chan BackupMessage) {
 		hub = newHub(id, b)
 		go hub.run()
 	}
-	cookie, _ := r.Cookie("username")
+	cookie, err := r.Cookie("username")
+	if err != nil {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
 	log.Println(cookie.Value)
 
 	serveWs(cookie.Value, hub, w, r)
