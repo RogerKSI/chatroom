@@ -73,7 +73,8 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- append([]byte(c.id+": "), message...)
+		t := time.Now()
+		c.hub.broadcast <- append([]byte(t.Format(time.RFC3339)+";"+c.id+";"), message...)
 	}
 }
 
