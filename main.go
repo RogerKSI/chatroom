@@ -16,7 +16,7 @@ var backUpMasterAddr = flag.String("master_addr", "localhost:8080", "master http
 var backupFlag = flag.Bool("backup", false, "run in backup mode")
 
 var validWsPath = regexp.MustCompile("^/ws/([0-9]+)$")
-var validRoomPath = regexp.MustCompile("^/room/([0-9]+)$")
+var validRoomPath = regexp.MustCompile("^/room(/([0-9]+))?$")
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
@@ -102,6 +102,7 @@ func main() {
 
 	http.HandleFunc("/", serveHome)
 	http.HandleFunc("/room/", serveRoom)
+	http.HandleFunc("/room", serveRoom)
 	http.HandleFunc("/backup", func(w http.ResponseWriter, r *http.Request) {
 		serveBackupMaster(backupHub, w, r)
 	})
