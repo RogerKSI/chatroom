@@ -120,7 +120,7 @@
 					}).done(function(data) {
 						var list = data.split(";");
 						$('#listroom').find("li:not(:last-child)").remove();
-						for(var i=0;i<list.length - 1;i++){
+						for(var i=0;i<list.length;i++){
 							var active = "class='is-active'";
 							$("<li><a " + (list[i] == room ? active : "") + " id=" + list[i] +">" + list[i] + "</a></li>").insertBefore($('#form-createroom'));
 						}
