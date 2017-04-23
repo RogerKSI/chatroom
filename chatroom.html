@@ -121,6 +121,7 @@
 						var list = data.split(";");
 						$('#listroom').find("li:not(:last-child)").remove();
 						for(var i=0;i<list.length;i++){
+							if(list[i]=="") continue;
 							var active = "class='is-active'";
 							$("<li><a " + (list[i] == room ? active : "") + " id=" + list[i] +">" + list[i] + "</a></li>").insertBefore($('#form-createroom'));
 						}
@@ -134,7 +135,6 @@
 					if(room!=newroom) {
 						$('#listroom').find('#'+room).removeClass('is-active');
 						$('#listroom').find('#'+newroom).addClass('is-active');
-						log.html("");
 						
 						if(room=="-1") {
 							room=newroom;
@@ -214,8 +214,10 @@
 								connect(i);
 						};
 						conn.onopen = function (evt) {
+								log.html("");
+
 								var item = $("<div class='columns'></div>");
-								item.html("<b>Connected to room " + room + "</b>");
+								item.html("<b>connected to room " + room + "</b>");
 								appendLog(item);
 								status = 2;
 								msg.attr("disabled",false);
