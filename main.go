@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sort"
+	"strings"
 )
 
 var addr = flag.String("addr", ":8080", "http service address")
@@ -16,8 +18,7 @@ var backUpMasterAddr = flag.String("master_addr", "localhost:8080", "master http
 
 var backupFlag = flag.Bool("backup", false, "run in backup mode")
 
-var validWsPath = regexp.MustCompile("^/ws/([0-9]+)$")
-var validRoomPath = regexp.MustCompile("^/room(/([a-zA-Z0-9]+))?$")
+var validWsPath = regexp.MustCompile("^/ws/([a-zA-Z0-9]+)$")
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
@@ -41,13 +42,6 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveRoom(w http.ResponseWriter, r *http.Request) {
-	//log.Println(r.URL)
-	m := validRoomPath.FindStringSubmatch(r.URL.Path)
-	if m == nil {
-		http.Error(w, "Not found", 404)
-		return
-	}
-
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", 405)
 		return
@@ -56,14 +50,16 @@ func serveRoom(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveRoomList(w http.ResponseWriter, r *http.Request) {
-	RoomLog.RLock();
-	roomList := ""
-	for key, _ := range RoomLog.v {
-		roomList = roomList + key + ";"
-	}
-	RoomLog.RUnlock();
-	fmt.Fprint(w, roomList)
+	RoomLog.RLock()
 
+	var keys []string
+	for k := range RoomLog.v {
+		keys = append(keys, k)
+	}
+	RoomLog.RUnlock()
+
+	sort.Strings(keys)
+	fmt.Fprint(w, strings.Join(keys[:], ";"))
 }
 
 func hubHandler(w http.ResponseWriter, r *http.Request, b chan BackupMessage) {
@@ -113,7 +109,6 @@ func main() {
 
 	http.HandleFunc("/", serveHome)
 	http.HandleFunc("/room", serveRoom)
-	http.HandleFunc("/room/", serveRoom)
 	http.HandleFunc("/roomlist", serveRoomList)
 	http.HandleFunc("/backup", func(w http.ResponseWriter, r *http.Request) {
 		serveBackupMaster(backupHub, w, r)
