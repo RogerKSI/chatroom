@@ -77,6 +77,7 @@
 	</body>
 
 	<script type="text/javascript" src="resources/js/jquery-3.2.1.min.js"></script>		
+	<script type="text/javascript" src="resources/js/moment.js"></script>
 	<script type="text/javascript" src="resources/js/custom.js"></script>
 
 	<script type="text/javascript">
@@ -192,20 +193,20 @@
 								var messages = evt.data.split('\n');
 
 								for (var i = 0; i < messages.length; i++) {
-									var message = messages[i].split(":");
+									var message = messages[i].split(";");
 									var item = $("<div class='columns'></div>");
 									var div_right = "";
-									if(message[0]==cookie[1]) {
+									if(message[1]==cookie[1]) {
 										div_right = $("<div class='message right'></div>");
 									} else {
 										div_right = $("<div class='message'></div>");
 									}
 									
 									var div_profile = $("<div></div>");
-									div_profile.html("<b>" + message[0] + "</b>");
+									div_profile.html("<b>" + message[1] + "</b>  <small>" + moment(message[0]).format("HH:mm") + "</small>");
 
 									var div_message = $("<div></div>");
-									div_message.html(message[1]);
+									div_message.html(message[2]);
 									
 									div_right.append(div_profile);
 									div_right.append(div_message);
