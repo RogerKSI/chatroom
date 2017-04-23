@@ -20,7 +20,7 @@
 					<a class="nav-item">
 						<img src="/resources/images/logo.png" style="min-height:30px;" alt="Bulma logo">
 					</a>
-					<a class="nav-item is-tab is-active">Chat</a>
+					<a class="nav-item is-tab is-hidden-mobile is-hidden-tablet-only is-active">Chat</a>
 				</div>
 				<div class="nav-right">
 					<a href="/" class="nav-item is-tab">Log out</a>
@@ -39,6 +39,11 @@
 					</ul>
 					<p class="menu-label">
 						Room
+						<a id="refresh">
+							<span class="icon is-small">
+								<i class="fa fa-refresh"></i>
+							</span>
+						</a>
 					</p>
 					<ul class="menu-list" id="listroom">
 						<li><a id="000">000</a></li>
@@ -57,20 +62,18 @@
 					</ul>
 				</aside>
 			</div>
-			<div class="column">
-				<div class="container" style="padding-top:10px;padding-right: 160px;">
-					<div id="log" style="height: 70vh;max-height: 70vh;overflow-y:auto;padding:30px 30px 30px 30px;">
-					</div>
-					<div style="padding-top: 30px;">
-						<form id="form">
-							<div class="field">
-								<p class="control">
-									<input class="input" placeholder="message" id="msg" />
-									<button type="submit" value="submit" hidden></button>
-								</p>
-							</div>
-						</form>		
-					</div>
+			<div class="column" style="padding-right: 50px;">
+				<div id="log" style="height: 70vh;max-height: 70vh;overflow-y:auto;padding:30px 30px 30px 30px;">
+				</div>
+				<div style="padding-top: 30px;">
+					<form id="form">
+						<div class="field">
+							<p class="control">
+								<input class="input" placeholder="message" id="msg" />
+								<button type="submit" value="submit" hidden></button>
+							</p>
+						</div>
+					</form>		
 				</div>
 			</div>
 		</div>
@@ -90,33 +93,55 @@
 				var msg = $("#msg");
 				var log = $("#log");
 				var status = 0;
-				var cookie = document.cookie.split('=');
-				var room = -1;
+				var room = "-1";
 				
+				// check user has cookie
+				var cookie = document.cookie.split('=');
 				if(cookie.length == 1) {
 					window.location = document.location.origin;
 				}
-				console.log(cookie);
+
+				// add username to UI
 				$('#username').html(cookie[1]);
 									
+				// user click newroom
 				$('#listroom').on('click', 'a', function (event) {
 					changeroom($(event.target).html());
 				});
 				
+				// disable message box 
 				msg.attr("disabled",true);
 				
+				// get list of room
+				$('#refresh')[0].onclick = function(evt){
+					$.ajax({
+						url: "/roomlist",
+						method: "GET"
+					}).done(function(data) {
+						var list = data.split(";");
+						$('#listroom').find("li:not(:last-child)").remove();
+						for(var i=0;i<list.length;i++){
+							var active = "class='is-active'";
+							$("<li><a " + (list[i] == room ? active : "") + " id=" + list[i] +">" + list[i] + "</a></li>").insertBefore($('#form-createroom'));
+						}
+					});
+				}
+				// trigger refresh list room 
+				$('#refresh').trigger('click');	
+				
+				// change room
 				function changeroom(newroom){
 					if(room!=newroom) {
 						$('#listroom').find('#'+room).removeClass('is-active');
 						$('#listroom').find('#'+newroom).addClass('is-active');
 						log.html("");
 						
-						if(room==-1) {
+						if(room=="-1") {
 							room=newroom;
 							connect(i);
 						}else {
 							room = newroom;
-						
+							msg.attr("disabled",true);
 							status=0;
 							if(conn) 
 								conn.close();
@@ -124,8 +149,9 @@
 					} 
 				}
 		
+		
+				// append message to chat
 				function appendLog(item) {
-
 						var doScroll = log[0].scrollTop > log[0].scrollHeight - log[0].clientHeight - 1;
 						log.append(item);						
 						if (doScroll) {
@@ -133,7 +159,8 @@
 						}
 				}
 
-				document.getElementById("form").onsubmit = function (event) {
+				// send message
+				$('#form')[0].onsubmit = function (event) {
 						event.preventDefault();
 						if (!conn) {
 								return false;
@@ -146,8 +173,8 @@
 						return false;
 				};
 
-				
-				document.getElementById("createroom").onsubmit = function (event) {
+				// create room
+				$('#createroom')[0].onsubmit = function (event) {
 						event.preventDefault();
 						var inp_room = $("#nameroom");
 						$("<li><a id=" + inp_room[0].value +">" + inp_room[0].value + "</a></li>").insertBefore($('#form-createroom'));
@@ -155,7 +182,7 @@
 						return false;
 				};
 
-				
+				//check browser support websocket
 				if (window["WebSocket"]) {
 					if(room!=-1) {
 						connect(i);
@@ -166,15 +193,20 @@
 						appendLog(item);
 				}
 				
+				
+				// connect to websocket
 				function connect(i){
 						conn = new WebSocket("ws://" + document.location.hostname + ":" + port[i] + "/ws/" + room);
+						status = 1;
 						conn.onclose = function (evt) {
-								if(status==1){
+								if(status == 2){
 									var item = $("<div class='columns'></div>");
-									item.html("<b>Connection closed.</b>");
+									item.html("<b>Connection loss. Please wait</b>");
 									appendLog(item);
-									status=0;
-									
+									status = 1;
+								}
+								
+								if(status == 1) {
 									i++;
 									if(i >= port.length)
 										i=0;
@@ -185,7 +217,7 @@
 								var item = $("<div class='columns'></div>");
 								item.html("<b>connected to room " + room + "</b>");
 								appendLog(item);
-								status=1;
+								status = 2;
 								msg.attr("disabled",false);
 
 						};
@@ -196,7 +228,8 @@
 									var message = messages[i].split(";");
 									var item = $("<div class='columns'></div>");
 									var div_right = "";
-									if(message[1]==cookie[1]) {
+									
+									if(message[1] == cookie[1]) {
 										div_right = $("<div class='message right'></div>");
 									} else {
 										div_right = $("<div class='message'></div>");
@@ -206,7 +239,8 @@
 									div_profile.html("<b>" + message[1] + "</b>  <small>" + moment(message[0]).format("HH:mm") + "</small>");
 
 									var div_message = $("<div></div>");
-									div_message.html(message[2]);
+									
+									div_message.html(message.slice(2,message.length).join(';'));
 									
 									div_right.append(div_profile);
 									div_right.append(div_message);
