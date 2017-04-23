@@ -50,6 +50,12 @@ func (h *Hub) run() {
 		case client := <-h.register:
 			h.clients[client] = true
 
+			RoomLog.Lock()
+			if _, ok := RoomLog.v[h.id]; !ok {
+				RoomLog.v[h.id] = [][]byte{}
+			}
+			RoomLog.Unlock()
+
 			// Sent chatlog to the new client
 			// Warning: By flooding chatlog into the client send channel, the newly registered client will be terminated
 			// if the chatlog is larger than channel buffer size
