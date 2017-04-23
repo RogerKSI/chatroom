@@ -50,6 +50,7 @@ func (h *Hub) run() {
 		case client := <-h.register:
 			h.clients[client] = true
 
+			// Create an empty entry when a room is registered to the system.
 			RoomLog.Lock()
 			if _, ok := RoomLog.v[h.id]; !ok {
 				RoomLog.v[h.id] = [][]byte{}
@@ -60,22 +61,7 @@ func (h *Hub) run() {
 			// Warning: By flooding chatlog into the client send channel, the newly registered client will be terminated
 			// if the chatlog is larger than channel buffer size
 			RoomLog.RLock()
-
-			UserLog.RLock()
-			unread := UserLog.v[UserKey{client.id, h.id}]
-			UserLog.RUnlock()
-
-			for i, m := range RoomLog.v[h.id] {
-				// Sent additional message to sperate read and unread message
-				if i == unread {
-					select {
-					case client.send <- []byte("--unread message--"):
-					default:
-						close(client.send)
-						delete(h.clients, client)
-					}
-				}
-
+			for _, m := range RoomLog.v[h.id] {
 				select {
 				case client.send <- m:
 				default:
