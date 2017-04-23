@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -37,7 +38,6 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", 405)
 		return
 	}
-
 }
 
 func serveRoom(w http.ResponseWriter, r *http.Request) {
@@ -53,6 +53,17 @@ func serveRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.ServeFile(w, r, "chatroom.html")
+}
+
+func serveRoomList(w http.ResponseWriter, r *http.Request) {
+	RoomLog.RLock();
+	roomList := ""
+	for key, _ := range RoomLog.v {
+		roomList = roomList + key + ";"
+	}
+	RoomLog.RUnlock();
+	fmt.Fprint(w, roomList)
+
 }
 
 func hubHandler(w http.ResponseWriter, r *http.Request, b chan BackupMessage) {
@@ -101,8 +112,9 @@ func main() {
 	go backupHub.run()
 
 	http.HandleFunc("/", serveHome)
-	http.HandleFunc("/room/", serveRoom)
 	http.HandleFunc("/room", serveRoom)
+	http.HandleFunc("/room/", serveRoom)
+	http.HandleFunc("/roomlist", serveRoomList)
 	http.HandleFunc("/backup", func(w http.ResponseWriter, r *http.Request) {
 		serveBackupMaster(backupHub, w, r)
 	})
