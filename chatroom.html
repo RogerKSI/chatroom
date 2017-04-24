@@ -23,7 +23,7 @@
 					<a class="nav-item is-tab is-hidden-mobile is-hidden-tablet-only is-active">Chat</a>
 				</div>
 				<div class="nav-right">
-					<a href="/" class="nav-item is-tab">Log out</a>
+					<a id="logout" class="nav-item is-tab">Log out</a>
 				</div>
 			</div>
 		</nav>
@@ -157,6 +157,16 @@
 						if (doScroll) {
 								log[0].scrollTop = log[0].scrollHeight - log[0].clientHeight;
 						}
+				}
+				
+				$('#logout')[0].onclick = function(event) {
+						event.preventDefault();
+					 
+						document.cookie = 'username=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+						conn.close();
+						
+						window.location = '/';
+						return false;
 				}
 
 				// send message
