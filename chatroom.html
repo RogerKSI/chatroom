@@ -132,6 +132,7 @@
 				
 				// change room
 				function changeroom(newroom){
+					
 					if(room!=newroom) {
 						$('#listroom').find('#'+room).removeClass('is-active');
 						$('#listroom').find('#'+newroom).addClass('is-active');
@@ -141,12 +142,23 @@
 							connect(i);
 						}else {
 							room = newroom;
-							msg.attr("disabled",true);
 							status=0;
 							if(conn) 
 								conn.close();
 						}
-					} 
+					} else {
+						$('#listroom').find('#'+room).removeClass('is-active');
+						status = -1;
+						room = -1;
+						
+						var item = $("<div class='columns'></div>");
+						item.html("<b>You left the chat</b>");
+						appendLog(item);
+						
+						if(conn) 
+							conn.close();
+						
+					}
 				}
 		
 		
@@ -209,6 +221,8 @@
 						conn = new WebSocket("ws://" + document.location.hostname + ":" + port[i] + "/ws/" + room);
 						status = 1;
 						conn.onclose = function (evt) {
+								msg.attr("disabled",true);
+
 								if(status == 2){
 									var item = $("<div class='columns'></div>");
 									item.html("<b>Connection loss. Please wait</b>");
@@ -219,9 +233,11 @@
 								if(status == 1) {
 									i++;
 									if(i >= port.length)
-										i=0;
+										i=0;								
 								}
-								connect(i);
+								
+								if(status>=0)
+									connect(i);	
 						};
 						conn.onopen = function (evt) {
 								log.html("");
