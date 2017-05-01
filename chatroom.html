@@ -88,7 +88,7 @@
 					
 		$(function () {
 				var i = 0;
-				var port = [8080,8081];
+				var host = ["localhost:8080","localhost:8081"];
 				var conn;
 				var msg = $("#msg");
 				var log = $("#log");
@@ -218,7 +218,7 @@
 				
 				// connect to websocket
 				function connect(i){
-						conn = new WebSocket("ws://" + document.location.hostname + ":" + port[i] + "/ws/" + room);
+						conn = new WebSocket("ws://" + host[i] + "/ws/" + room);
 						status = 1;
 						conn.onclose = function (evt) {
 								msg.attr("disabled",true);
@@ -232,7 +232,7 @@
 								
 								if(status == 1) {
 									i++;
-									if(i >= port.length)
+									if(i >= host.length)
 										i=0;								
 								}
 								
